@@ -20,25 +20,32 @@ namespace Book_Shelf.Controllers
 
         // POST api/<AuthController>
         [HttpPost("SignUp")]
-        public IActionResult SignUp([FromBody] User user)
+        public async Task<IActionResult> SignUp([FromBody] User user)
         {
             if (user == null)
             {
                 return BadRequest("User cannot be null");
             }
-            var result = _authService.SignUp(user);
-            if (result)
+            try
             {
+                var result = await _authService.SignUp(user);
+
+
                 return Ok("User registered successfully");
             }
-            else
-            {
-                return BadRequest("User registration failed");
+            catch (InvalidOperationException ex) {
+
+                return BadRequest(ex.Message);
             }
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong on the server");
+            }
+            
         }
 
         [HttpPost("SignIn")]
-        public IActionResult SignIn([FromBody] LoginViewModel login)
+        public async Task<IActionResult> SignIn([FromBody] LoginViewModel login)
         {
             if (login == null)
             {
@@ -48,31 +55,44 @@ namespace Book_Shelf.Controllers
             {
                 return BadRequest("Email and password cannot be null or empty");
             }
-            var result = _authService.SignIn(login.Email, login.Password);
-            if (result)
+            try
             {
-                return Ok("User signed in successfully");
+                var result = await _authService.SignIn(login.Email, login.Password);
+               
+                    return Ok("User signed in successfully");
+
+               
             }
-            else
+            catch(InvalidOperationException ex)
             {
-                return Unauthorized("Invalid email or password");
+                return Unauthorized(ex.Message);
             }
         }
 
         [HttpGet("GetUser/{id}")]
-        public IActionResult GetUser(int id)
+        public async Task<IActionResult> GetUser(int id)
         {
+
             if (id <= 0)
             {
                 return BadRequest("Invalid user ID");
             }
-            var user = _authService.GetUserById(id);
-            if (user == null)
+            try
             {
-                return NotFound("User not found");
+                var user = await _authService.GetUserById(id);
+                return Ok(user);
             }
-            return Ok(user);
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message); // 404 if user not found
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong on the server");
+            }
         }
+
+
 
     }
 }

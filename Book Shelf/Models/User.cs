@@ -1,4 +1,6 @@
-﻿namespace Book_Shelf.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Book_Shelf.Models
 {
     public enum UserRole
     {
@@ -9,6 +11,8 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
+
+        [Required]
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string? Phone { get; set; }

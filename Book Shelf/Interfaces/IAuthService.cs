@@ -5,9 +5,9 @@ namespace Book_Shelf.Interfaces
 {
     public interface IAuthService
     {
-        bool SignUp(User user);
+        Task<bool> SignUp(User user);
 
-        bool SignIn(string email, string password);
-        UserDetailsViewModel GetUserById(int id);
+        Task<bool> SignIn(string email, string password);
+         Task<UserDetailsViewModel> GetUserById(int id);
     }
 }
