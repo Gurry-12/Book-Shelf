@@ -9,5 +9,10 @@ namespace Book_Shelf.Interfaces
 
         Task<bool> SignIn(string email, string password);
          Task<UserDetailsViewModel> GetUserById(int id);
+        Task<List<UserDetailsViewModel>> GetAllUsers();
+        string GenerateJwtToken(User user);
+        Task<User> GetUserByEmail(string email);
+
+        bool ForgotPassword(LoginViewModel user);
     }
 }

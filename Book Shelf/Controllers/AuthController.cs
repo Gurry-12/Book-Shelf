@@ -1,6 +1,7 @@
 ﻿using Book_Shelf.Interfaces;
 using Book_Shelf.Models;
 using Book_Shelf.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -33,7 +34,8 @@ namespace Book_Shelf.Controllers
 
                 return Ok("User registered successfully");
             }
-            catch (InvalidOperationException ex) {
+            catch (InvalidOperationException ex)
+            {
 
                 return BadRequest(ex.Message);
             }
@@ -41,7 +43,7 @@ namespace Book_Shelf.Controllers
             {
                 return StatusCode(500, "Something went wrong on the server");
             }
-            
+
         }
 
         [HttpPost("SignIn")]
@@ -58,12 +60,28 @@ namespace Book_Shelf.Controllers
             try
             {
                 var result = await _authService.SignIn(login.Email, login.Password);
-               
-                    return Ok("User signed in successfully");
+                if (result)
+                {
+                    // Check if the user is deleted
+                    var user = await _authService.GetUserByEmail(login.Email);
+                    // Generate JWT token
+                    var token = _authService.GenerateJwtToken(user);
 
-               
+                   
+
+                    // Return the token in the response
+                    return Ok(new { Message = "User signed in successfully" , token});
+
+                }
+                else
+                {
+                    return Unauthorized("Invalid email or password");
+                }
+
+
+
             }
-            catch(InvalidOperationException ex)
+            catch (InvalidOperationException ex)
             {
                 return Unauthorized(ex.Message);
             }
@@ -91,6 +109,68 @@ namespace Book_Shelf.Controllers
                 return StatusCode(500, "Something went wrong on the server");
             }
         }
+
+        /// Gets all users from the database.
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            try
+            {
+                var users = await _authService.GetAllUsers();
+                return Ok(users);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong on the server");
+            }
+        }
+
+        [Authorize(Roles = "Admin,Customer")]
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] LoginViewModel user)
+        {
+            if (string.IsNullOrEmpty(user.Email))
+            {
+                return BadRequest("Email cannot be null or empty");
+            }
+            try
+            {
+               bool valid =  _authService.ForgotPassword(user);
+                // Implement your password reset logic here
+                // For example, send a password reset email
+                return Ok("Password reset link sent to your email");
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong on the server");
+            }
+        }
+
+
+        // Note: JWT tokens are stateless, so logging out usually involves removing the token from the client side.
+        // If you are using cookies, you can clear the cookie here.
+        // If you are using JWT tokens, you can just inform the client to remove the token.
+
+        //[Authorize]
+        //[HttpGet("Logout")]
+        //public IActionResult Logout()
+        //{
+        //    try
+        //    {                // Check if the user is authenticated
+        //        if (User.Identity.IsAuthenticated)
+        //        {
+        //            // Clear the JWT cookie
+        //            return Ok("User logged out successfully");
+        //        }
+
+        //        return Unauthorized("User is not authenticated");
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return StatusCode(500, "Something went wrong on the server");
+        //    }
+        //}
 
 
 
